@@ -1,10 +1,21 @@
-const task = require("../models/task");
 const Task = require("../models/task");
+
+let message = "";
+let type = "";
 
 const getAllTasks = async (req, res) => {
   try {
+    setTimeout(() => {
+      message = ''
+    },2000)
     const tasksList = await Task.find();
-    return res.render("index", { tasksList, task: null, taskDelete: null });
+    return res.render("index", {
+      tasksList,
+      task: null,
+      taskDelete: null,
+      message,
+      type,
+    });
   } catch (err) {
     res.status(500).send({ error: err.message });
   }
@@ -14,14 +25,18 @@ const createTask = async (req, res) => {
   const task = req.body;
 
   if (!task.task) {
+    message = "Insira um texto antes de adicionar a tarefa";
+    type = "danger";
     return res.redirect("/");
-  } else {
-    try {
-      await Task.create(task);
-      return res.redirect("/");
-    } catch {
-      res.status(500).send({ error: err.message });
-    }
+  }
+
+  try {
+    await Task.create(task);
+    message = "Tarefa criada com sucesso";
+    type = "success";
+    return res.redirect("/");
+  } catch(err) {
+    res.status(500).send({ error: err.message });
   }
 };
 
@@ -30,10 +45,10 @@ const getById = async (req, res) => {
     const tasksList = await Task.find();
     if (req.params.method == "update") {
       const task = await Task.findOne({ _id: req.params.id });
-      res.render("index", { task, tasksList, taskDelete: null });
+      res.render("index", { task, tasksList, taskDelete: null, message, type });
     } else {
       const taskDelete = await Task.findOne({ _id: req.params.id });
-      res.render("index", { task: null, tasksList, taskDelete });
+      res.render("index", { task: null, tasksList, taskDelete, message, type });
     }
   } catch (err) {
     res.status(500).send({ error: err.message });
@@ -44,26 +59,29 @@ const updateOneTask = async (req, res) => {
   try {
     const task = req.body;
     await Task.updateOne({ _id: req.params.id }, task);
+    message = "Tarefa atualizada com sucesso!";
+    type = "success";
     res.redirect("/");
   } catch (err) {
     res.status(500).send({ error: err.message });
   }
 };
 
-const deleteOneTask = async (req,res) => {
-
-  try{
-    await Task.deleteOne({_id: req.params.id})
-    res.redirect("/")
-  } catch{
+const deleteOneTask = async (req, res) => {
+  try {
+    await Task.deleteOne({ _id: req.params.id });
+    message = "Tarefa deletada com sucesso!";
+    type = "success";
+    res.redirect("/");
+  } catch (err) {
     res.status(500).send({ error: err.message });
   }
-}
+};
 
 module.exports = {
   getAllTasks,
   createTask,
   getById,
   updateOneTask,
-  deleteOneTask
+  deleteOneTask,
 };
